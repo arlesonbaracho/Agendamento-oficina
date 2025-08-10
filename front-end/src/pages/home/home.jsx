@@ -13,11 +13,30 @@ export default function Home() {
   const [usuario, setUsuario] = useState(null);
 
   const imagens = ['/img/img-1.jpg', '/img/img-2.webp'];
-  const servicos = [
-    { title: 'Troca de Óleo', icon: '🛢️' },
-    { title: 'Alinhamento', icon: '⚙️' },
-    { title: 'Freios', icon: '🚗' },
+
+  const atracoes = [
+    {
+      titulo: 'Troca de Óleo',
+      descricao: 'Serviço rápido e eficiente.',
+      imagem: '/img/img-1.jpg'
+    },
+    {
+      titulo: 'Alinhamento',
+      descricao: 'Dirija com mais segurança.',
+      imagem: '/img/img-2.webp'
+    },
+    {
+      titulo: 'Freios',
+      descricao: 'Segurança é prioridade.',
+      imagem: '/img/img-3.jpg'
+    },
+    {
+      titulo: 'Suspensão',
+      descricao: 'Conforto e estabilidade.',
+      imagem: '/img/img-4.jpg'
+    }
   ];
+
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -91,24 +110,25 @@ export default function Home() {
             1024: { slidesPerView: 3 },
           }}
         >
-          {imagens.map((src, idx) => (
+          {atracoes.map((item, idx) => (
             <SwiperSlide key={idx}>
               <div className="bg-white rounded-xl overflow-hidden shadow-lg">
                 <img
-                  src={src}
-                  alt={`Atração ${idx + 1}`}
+                  src={item.imagem}
+                  alt={item.titulo}
                   className="w-full h-40 object-cover"
                 />
                 <div className="p-4">
-                  <h3 className="font-semibold">Atração {idx + 1}</h3>
+                  <h3 className="font-semibold text-black">{item.titulo}</h3>
                   <p className="text-sm text-gray-700">
-                    Descrição breve convidando o usuário a saber mais.
+                    {item.descricao}
                   </p>
                 </div>
               </div>
             </SwiperSlide>
           ))}
         </Swiper>
+
       </div>
 
 

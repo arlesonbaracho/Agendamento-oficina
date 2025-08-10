@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
-import AuthLayout from '../../components/AuthLayout';
 
 function validarSenhaRequisitos(senha) {
   return {
@@ -22,10 +21,12 @@ function emailValido(email) {
 export default function Cadastro() {
   const [email, setEmail] = useState('');
   const [nome, setNome] = useState('');
+  const [telefone, setTelefone] = useState(''); // ✅ adicionado
   const [senha, setSenha] = useState('');
   const [verSenha, setVerSenha] = useState(false);
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(false);
+
   const requisitos = validarSenhaRequisitos(senha);
   const navigate = useNavigate();
 
@@ -34,7 +35,7 @@ export default function Cadastro() {
     setErro('');
     setCarregando(true);
 
-    if (!email || !senha || !nome) {
+    if (!email || !senha || !nome || !telefone) {
       setErro('Preencha todos os campos.');
       setCarregando(false);
       return;
@@ -53,16 +54,18 @@ export default function Cadastro() {
     try {
       const credenciais = await createUserWithEmailAndPassword(auth, email, senha);
 
-      // Adiciona nome ao Auth
       await updateProfile(credenciais.user, {
         displayName: nome
       });
+
       await setDoc(doc(db, 'usuarios', credenciais.user.uid), {
         uid: credenciais.user.uid,
         nome,
         email,
+        telefone,
         criadoEm: new Date(),
       });
+
       navigate('/login');
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
@@ -94,6 +97,7 @@ export default function Cadastro() {
           </div>
         )}
 
+        {/* Nome */}
         <div>
           <label htmlFor="nome" className="block mb-1 text-sm font-semibold">
             Nome
@@ -105,12 +109,30 @@ export default function Cadastro() {
             onChange={(e) => setNome(e.target.value)}
             placeholder="Seu nome"
             className="w-full px-4 py-2 rounded border border-blue-600 bg-transparent placeholder-gray-400 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
           />
         </div>
 
+        {/* Telefone */}
+        <div>
+          <label htmlFor="telefone" className="block mb-1 text-sm font-semibold">
+            Telefone
+          </label>
+          <input
+            id="telefone"
+            type="tel"
+            value={telefone}
+            onChange={(e) => setTelefone(e.target.value)}
+            placeholder="(99) 99999-9999"
+            className="w-full px-4 py-2 rounded border border-blue-600 bg-transparent placeholder-gray-400 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        {/* Email */}
         <div>
           <label htmlFor="email" className="block mb-1 text-sm font-semibold">
-            E‑mail
+            E-mail
           </label>
           <input
             id="email"
@@ -119,9 +141,11 @@ export default function Cadastro() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="nome@exemplo.com"
             className="w-full px-4 py-2 rounded border border-blue-600 bg-transparent placeholder-gray-400 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
           />
         </div>
 
+        {/* Senha */}
         <div>
           <label htmlFor="senha" className="block mb-1 text-sm font-semibold">
             Senha
@@ -134,6 +158,7 @@ export default function Cadastro() {
               onChange={(e) => setSenha(e.target.value)}
               placeholder="Digite sua senha"
               className="w-full px-4 py-2 rounded border border-blue-600 bg-transparent text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-16"
+              required
             />
             <button
               type="button"
@@ -145,7 +170,7 @@ export default function Cadastro() {
           </div>
         </div>
 
-        {/* Checklist requisitos */}
+        {/* Requisitos de senha */}
         <div className="text-sm mb-4 space-y-1">
           <p className={requisitos.minimo ? 'text-green-500' : 'text-red-500'}>
             {requisitos.minimo ? '✔' : '✖'} Mínimo 8 caracteres
