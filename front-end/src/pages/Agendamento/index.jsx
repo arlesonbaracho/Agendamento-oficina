@@ -13,6 +13,7 @@ export default function Agendamento() {
   const [observacoes, setObservacoes] = useState('');
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState('');
+  const [horariosDisponiveis, setHorariosDisponiveis] = useState([]);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -23,12 +24,35 @@ export default function Agendamento() {
     }
   }, []);
 
+  // Gera horários válidos com base no dia da semana
+  const gerarHorarios = (dataSelecionada) => {
+    if (!dataSelecionada) return;
+    const diaSemana = new Date(dataSelecionada).getDay(); // 0 = domingo, 6 = sábado
+
+    let inicio = 8;
+    let fim = diaSemana === 6 ? 13 : 16; // sábado até 13h, outros até 16h
+    let horarios = [];
+
+    for (let h = inicio; h <= fim; h++) {
+      horarios.push(`${String(h).padStart(2, '0')}:00`);
+    }
+    setHorariosDisponiveis(horarios);
+  };
+
   const handleAgendar = async (e) => {
     e.preventDefault();
+
+    // Se for "Outros", descrição é obrigatória
+    if (servico === 'Outros' && !observacoes.trim()) {
+      setMensagem('A descrição é obrigatória para o serviço "Outros".');
+      return;
+    }
+
     if (!servico || !data || !hora) {
       setMensagem('Preencha todos os campos obrigatórios.');
       return;
     }
+
     setLoading(true);
     try {
       await addDoc(collection(db, 'agendamentos'), {
@@ -73,6 +97,7 @@ export default function Agendamento() {
             <option value="Alinhamento">Alinhamento</option>
             <option value="Freios">Freios</option>
             <option value="Suspensão">Suspensão</option>
+            <option value="Outros">Outros</option>
           </select>
         </div>
 
@@ -81,7 +106,11 @@ export default function Agendamento() {
           <input
             type="date"
             value={data}
-            onChange={(e) => setData(e.target.value)}
+            onChange={(e) => {
+              setData(e.target.value);
+              gerarHorarios(e.target.value);
+              setHora('');
+            }}
             className="w-full p-2 rounded bg-[#1e293b] border border-gray-700 text-white"
             required
           />
@@ -89,17 +118,24 @@ export default function Agendamento() {
 
         <div>
           <label className="block mb-1">Hora *</label>
-          <input
-            type="time"
+          <select
             value={hora}
             onChange={(e) => setHora(e.target.value)}
             className="w-full p-2 rounded bg-[#1e293b] border border-gray-700 text-white"
             required
-          />
+            disabled={!horariosDisponiveis.length}
+          >
+            <option value="">Selecione</option>
+            {horariosDisponiveis.map((h) => (
+              <option key={h} value={h}>{h}</option>
+            ))}
+          </select>
         </div>
 
         <div>
-          <label className="block mb-1">Observações</label>
+          <label className="block mb-1">
+            Observações {servico === 'Outros' && '*'}
+          </label>
           <textarea
             value={observacoes}
             onChange={(e) => setObservacoes(e.target.value)}
@@ -123,4 +159,3 @@ export default function Agendamento() {
     </div>
   );
 }
-
